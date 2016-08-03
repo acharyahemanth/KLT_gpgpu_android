@@ -1,4 +1,4 @@
-package hemanth.klt_gpgpu_android;
+package hemanth.kltgpgpuandroid;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
