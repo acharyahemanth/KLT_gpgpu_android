@@ -1,0 +1,3 @@
+[submodule "app/src/main/jni/KLT_gpgpu"]
+	path = app/src/main/jni/KLT_gpgpu
+	url = git@github.com:acharyahemanth/KLT_gpgpu.git
