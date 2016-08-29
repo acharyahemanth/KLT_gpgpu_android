@@ -17,6 +17,7 @@ LOCAL_LDLIBS            += -lm -llog -landroid -lEGL -lz -lGLESv3
 LOCAL_STATIC_LIBRARIES  += klt_gpgpu ndk_helper android_native_app_glue
 LOCAL_CPP_EXTENSION     := .cxx .cpp .cc
 LOCAL_C_INCLUDES        += $(GLM_PATH)
+LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)
 include $(BUILD_SHARED_LIBRARY)
 
 ## KLT_gpgpu

@@ -7,7 +7,7 @@
 
 //#include "shoe_engine.h"
 #include <jni.h>
-#include "../mylog.h"
+#include "mylog.h"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include <glm/glm.hpp>
@@ -18,16 +18,18 @@
 #include <sstream>
 #include "gl_setup.h"
 #include "gl3stub.h"
-
+#include "klt_gpu.h"
+#include "ShaderReader.h"
 
 //extern BasicEngine * g_basic_engine;
+ShaderReader *shader_reader;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_MainActivity_helloWorldNative
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_helloWorldNative
 (JNIEnv *env, jobject obj) {
     cv::Mat a = 5*cv::Mat::ones(5,5,CV_8UC1);
     glm::mat4 b = glm::mat4();
@@ -56,7 +58,7 @@ std::string getFileName(std::string file_name) {
 }
 
 
-JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_MainActivity_testAssetFolderReadNative(
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_testAssetFolderReadNative(
         JNIEnv *env, jobject obj, jstring internal_data_path,
         jobject assetManager){
     myLOGD("testAssetFolderRead()");
@@ -96,9 +98,10 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_MainActivity_testAssetFolder
         myLOGE("Asset not found: %s", assetName.c_str());
     }
 
+    shader_reader = new ShaderReader(env, assetManager, apkWorkspacePath);
 }
 
-JNIEXPORT jboolean JNICALL Java_hemanth_kltgpgpuandroid_MyGLRenderer_setupGLES3Native
+JNIEXPORT jboolean JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_setupGLES3Native
         (JNIEnv *env, jobject obj) {
     myLOGD("MyGLRenderer_setupGLES3Native");
     bool is_init_success =false;
@@ -110,6 +113,17 @@ JNIEXPORT jboolean JNICALL Java_hemanth_kltgpgpuandroid_MyGLRenderer_setupGLES3N
 
     jboolean return_flag = (is_init_success == true) ? JNI_TRUE : JNI_FALSE;
     return return_flag;
+}
+
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_loadResourcesNative(
+        JNIEnv *env, jobject obj, jint xoffset, jint yoffset, jint width, jint height){
+    myLOGD("loadResourcesNative");
+    const int num_pyramid_levels = 3;
+    const int search_window_size = 7;
+    KLT_gpu klt(num_pyramid_levels,search_window_size,width, height);
+
+//    myLOGD("Reading Shader...");
+//    std::string shader_code = shader_reader->getShader("test.fsh");
 }
 
 

@@ -1,20 +1,46 @@
 package hemanth.kltgpgpuandroid;
 
 import android.content.res.AssetManager;
+import android.graphics.Point;
 import android.hardware.Camera;
+import android.support.v4.view.WindowCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
 
 public class MainActivity extends AppCompatActivity {
     CameraClass mCameraObject;
-    private native void helloWorldNative();
-    private native void testAssetFolderReadNative(String pathToInternalDir, AssetManager am);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Set Navbar and ActionBar properties
+        supportRequestWindowFeature(WindowCompat.FEATURE_ACTION_BAR_OVERLAY);
+        setImmersiveSticky(getWindow());
+        View decorView = getWindow().getDecorView();
+        decorView.setOnSystemUiVisibilityChangeListener
+                (new View.OnSystemUiVisibilityChangeListener() {
+                    @Override
+                    public void onSystemUiVisibilityChange(int visibility) {
+                        setImmersiveSticky(getWindow());
+                    }
+                });
+
+        //Set screen dimensions
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getRealSize(size);
+        int screenWidth = size.x;
+        int screenHeight = size.y;
+        AppHelperFuncs.setScreenDims(screenWidth,screenHeight);
+        AppHelperFuncs.myLOGD("Screen size : w/h : " + screenWidth + " " + screenHeight);
+
+
 
         //Instantiate camera
         mCameraObject = new CameraClass(this, newCamPreviewCallback);
@@ -47,14 +73,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        helloWorldNative();
+        JNICaller.helloWorldNative();
 
         String pathToInternalDir = getApplicationContext().getFilesDir().getAbsolutePath();
         AssetManager am = getApplicationContext().getAssets();
-        testAssetFolderReadNative(pathToInternalDir, am);
+        JNICaller.testAssetFolderReadNative(pathToInternalDir, am);
 
         //Start camera
-        mCameraObject.initAndStartCamera();
+//        mCameraObject.initAndStartCamera();
     }
 
     @Override
@@ -94,4 +120,16 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
+
+    public static void setImmersiveSticky(Window appWindow) {
+
+        View decorView = appWindow.getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
+                        //| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION //HA : Show the navigation bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        );//| View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        // AM: commented this out to enable listview in landscape.  why?? tbd
+    }
 }
