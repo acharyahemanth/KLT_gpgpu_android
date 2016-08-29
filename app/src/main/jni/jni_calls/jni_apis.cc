@@ -23,6 +23,7 @@
 
 //extern BasicEngine * g_basic_engine;
 ShaderReader *shader_reader;
+KLT_gpu *klt;
 
 #ifdef __cplusplus
 extern "C" {
@@ -98,6 +99,20 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_testAssetFolderRea
         myLOGE("Asset not found: %s", assetName.c_str());
     }
 
+//    shader_reader = new ShaderReader(env, assetManager, apkWorkspacePath);
+}
+
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_setupShaderReaderNative(
+        JNIEnv *env, jobject obj, jstring internal_data_path,
+        jobject assetManager){
+    myLOGD("setupShaderReaderNative()");
+
+    //Set internal storage directory path------------
+    const char *c_internal_data_path;
+    c_internal_data_path = env->GetStringUTFChars( internal_data_path , NULL ) ;
+    std::string apkWorkspacePath = std::string(c_internal_data_path);//Set app internal data storage path
+    env->ReleaseStringUTFChars(internal_data_path, c_internal_data_path);
+
     shader_reader = new ShaderReader(env, assetManager, apkWorkspacePath);
 }
 
@@ -118,14 +133,38 @@ JNIEXPORT jboolean JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_setupGLES3Nati
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_loadResourcesNative(
         JNIEnv *env, jobject obj, jint xoffset, jint yoffset, jint width, jint height){
     myLOGD("loadResourcesNative");
+    myLOGD("width : %d, height : %d",width, height);
     const int num_pyramid_levels = 3;
     const int search_window_size = 7;
-    KLT_gpu klt(num_pyramid_levels,search_window_size,width, height);
+    klt = new KLT_gpu(num_pyramid_levels,search_window_size,width, height);
 
 //    myLOGD("Reading Shader...");
 //    std::string shader_code = shader_reader->getShader("test.fsh");
 }
 
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_processFrameNative
+        (JNIEnv *env, jobject obj, jbyteArray inPixels, jint width, jint height) {
+
+    myLOGD("processFrameNative");
+    if(klt == NULL) {
+        return;
+    }
+
+    //YUV -> RGBA conversion
+    jbyte *_in = env->GetByteArrayElements(inPixels, NULL);
+    cv::Mat yuv(height * 1.5, width, CV_8UC1, (uchar *) _in);
+    cv::Mat cameraImageForBack;
+    cv::cvtColor(yuv, cameraImageForBack, CV_YUV2RGBA_NV21, 4); //~20
+//    cv::imwrite("/mnt/sdcard/tryamble_debug/backimg.png",cameraImageForBack);
+//    cv::Mat luma(height, width, CV_8UC1, (uchar *) _in);
+//    camera_image_small = luma.clone();
+
+
+    klt->drawFrame(cameraImageForBack);
+
+    env->ReleaseByteArrayElements(inPixels, _in, JNI_ABORT);
+    return;
+}
 
 
 #ifdef __cplusplus

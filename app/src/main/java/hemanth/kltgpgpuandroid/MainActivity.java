@@ -14,6 +14,7 @@ import android.view.Window;
 
 public class MainActivity extends AppCompatActivity {
     CameraClass mCameraObject;
+    MyGLSurfaceView mGLView=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,14 +74,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        AppHelperFuncs.setMainActivityReference(this);
+
         JNICaller.helloWorldNative();
 
         String pathToInternalDir = getApplicationContext().getFilesDir().getAbsolutePath();
         AssetManager am = getApplicationContext().getAssets();
-        JNICaller.testAssetFolderReadNative(pathToInternalDir, am);
+//        JNICaller.testAssetFolderReadNative(pathToInternalDir, am);
+        JNICaller.setupShaderReaderNative(pathToInternalDir, am);
 
         //Start camera
-//        mCameraObject.initAndStartCamera();
+        mCameraObject.initAndStartCamera();
     }
 
     @Override
@@ -103,17 +108,16 @@ public class MainActivity extends AppCompatActivity {
     public Camera.PreviewCallback newCamPreviewCallback = new Camera.PreviewCallback() {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
-            AppHelperFuncs.myLOGD("camera callback received!");
+//            AppHelperFuncs.myLOGD("camera callback received!");
 
 
-//            if(mGLView != null) {
-//                //Native call to create edge map data
-//                //if(mFramectr >= 30) {
-//                //Start Canny after some 30 frames... camera seems to focus
-//                sendCamImageToNative(data, mCameraObject.mPreviewHeight, mCameraObject.mPreviewWidth);
-//                //}
-//                mGLView.requestRender();
-//            }
+            if(mGLView != null) {
+                JNICaller.processFrameNative(data,mCameraObject.mPreviewWidth,mCameraObject.mPreviewHeight);
+
+
+                //Native call to create edge map data
+                mGLView.requestRender();
+            }
 
             //Return buffer to camera
             camera.addCallbackBuffer(data);
@@ -131,5 +135,10 @@ public class MainActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         );//| View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         // AM: commented this out to enable listview in landscape.  why?? tbd
+    }
+
+    public void loadResourcesDone(){
+        AppHelperFuncs.myLOGD("loadResourcesDone()");
+        mGLView = (MyGLSurfaceView)findViewById(R.id.glsurfaceview);
     }
 }

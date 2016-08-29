@@ -12,6 +12,8 @@ public class JNICaller {
 
     public static native void helloWorldNative();
     public static native void testAssetFolderReadNative(String pathToInternalDir, AssetManager am);
+    public static native void setupShaderReaderNative(String pathToInternalDir, AssetManager am);
+    public static native void processFrameNative(byte [] data, int width, int height);
 
 
 }
