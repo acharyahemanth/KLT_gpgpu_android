@@ -38,7 +38,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     }
 
     public void onDrawFrame(GL10 unused) {
-//        drawFrameNative();
+        JNICaller.drawFrameNative();
     }
 
     public void onSurfaceChanged(GL10 unused, int width, int height) {

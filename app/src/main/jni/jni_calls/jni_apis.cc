@@ -24,6 +24,7 @@
 //extern BasicEngine * g_basic_engine;
 ShaderReader *shader_reader;
 KLT_gpu *klt;
+cv::Mat cameraImageForBack;
 
 #ifdef __cplusplus
 extern "C" {
@@ -153,19 +154,43 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_processFrameNative
     //YUV -> RGBA conversion
     jbyte *_in = env->GetByteArrayElements(inPixels, NULL);
     cv::Mat yuv(height * 1.5, width, CV_8UC1, (uchar *) _in);
-    cv::Mat cameraImageForBack;
-    cv::cvtColor(yuv, cameraImageForBack, CV_YUV2RGBA_NV21, 4); //~20
+    cv::cvtColor(yuv, cameraImageForBack, CV_YUV2RGB_NV21, 3); //~20
+    cv::flip(cameraImageForBack,cameraImageForBack,0);
 //    cv::imwrite("/mnt/sdcard/tryamble_debug/backimg.png",cameraImageForBack);
 //    cv::Mat luma(height, width, CV_8UC1, (uchar *) _in);
 //    camera_image_small = luma.clone();
-
-
-    klt->drawFrame(cameraImageForBack);
 
     env->ReleaseByteArrayElements(inPixels, _in, JNI_ABORT);
     return;
 }
 
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_drawFrameNative
+        (JNIEnv *env, jobject obj) {
+    myLOGD("drawFrameNative");
+
+    if(klt==NULL)
+        return;
+
+    klt->drawFrame(cameraImageForBack);
+}
+
+
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_debugGLNative
+        (JNIEnv *env, jobject obj) {
+    myLOGD("debugGLNative");
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    //Render black
+    glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+
+    //Setup viewport to smallest texture
+    glViewport(0,0,1280,720);
+
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+}
 
 #ifdef __cplusplus
 }
