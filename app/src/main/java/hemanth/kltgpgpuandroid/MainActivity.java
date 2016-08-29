@@ -1,5 +1,6 @@
 package hemanth.kltgpgpuandroid;
 
+import android.content.res.AssetManager;
 import android.hardware.Camera;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.view.MenuItem;
 public class MainActivity extends AppCompatActivity {
     CameraClass mCameraObject;
     private native void helloWorldNative();
+    private native void testAssetFolderReadNative(String pathToInternalDir, AssetManager am);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         helloWorldNative();
 
+        String pathToInternalDir = getApplicationContext().getFilesDir().getAbsolutePath();
+        AssetManager am = getApplicationContext().getAssets();
+        testAssetFolderReadNative(pathToInternalDir, am);
+
         //Start camera
         mCameraObject.initAndStartCamera();
     }
@@ -59,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
         // destroy native objects
 //        deleteObjectNative();
-        
+
         finish(); // die..!
 
     }
