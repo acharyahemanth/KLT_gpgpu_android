@@ -20,11 +20,15 @@
 #include "gl3stub.h"
 #include "klt_gpu.h"
 #include "ShaderReader.h"
+#include <mutex>
 
 //extern BasicEngine * g_basic_engine;
 ShaderReader *shader_reader;
 KLT_gpu *klt;
-cv::Mat cameraImageForBack;
+cv::Mat cam_image_for_back, cam_image_for_algo;
+std::mutex mtx_camera;
+bool new_cam_image_available=false;
+cv::Mat back_image, algo_image;
 
 #ifdef __cplusplus
 extern "C" {
@@ -139,8 +143,7 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_loadResourcesNativ
     const int search_window_size = 7;
     klt = new KLT_gpu(num_pyramid_levels,search_window_size,width, height);
 
-//    myLOGD("Reading Shader...");
-//    std::string shader_code = shader_reader->getShader("test.fsh");
+    mtx_camera.unlock();
 }
 
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_processFrameNative
@@ -154,11 +157,16 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_processFrameNative
     //YUV -> RGBA conversion
     jbyte *_in = env->GetByteArrayElements(inPixels, NULL);
     cv::Mat yuv(height * 1.5, width, CV_8UC1, (uchar *) _in);
-    cv::cvtColor(yuv, cameraImageForBack, CV_YUV2RGB_NV21, 3); //~20
-    cv::flip(cameraImageForBack,cameraImageForBack,0);
-//    cv::imwrite("/mnt/sdcard/tryamble_debug/backimg.png",cameraImageForBack);
-//    cv::Mat luma(height, width, CV_8UC1, (uchar *) _in);
-//    camera_image_small = luma.clone();
+    cv::Mat luma(height, width, CV_8UC1, (uchar *) _in);
+
+    if(mtx_camera.try_lock()) {
+        cv::cvtColor(yuv, cam_image_for_back, CV_YUV2RGB_NV21, 3);
+//        cv::resize(cam_image_for_back, cam_image_for_back, cv::Size(0,0),0.5,0.5);
+        cv::flip(cam_image_for_back, cam_image_for_back, 0);
+//        cv::resize(luma, cam_image_for_algo, cv::Size(0,0),0.5,0.5);
+        new_cam_image_available = true;
+        mtx_camera.unlock();
+    }
 
     env->ReleaseByteArrayElements(inPixels, _in, JNI_ABORT);
     return;
@@ -171,7 +179,17 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_drawFrameNative
     if(klt==NULL)
         return;
 
-    klt->drawFrame(cameraImageForBack);
+    bool draw_frame=false;
+    mtx_camera.lock();
+        if(new_cam_image_available){
+            back_image = cam_image_for_back.clone();
+//            algo_image = cam_image_for_algo.clone();
+            new_cam_image_available = false;
+            draw_frame = true;
+        }
+    mtx_camera.unlock();
+    if(draw_frame)
+        klt->drawFrame(back_image, 1280, 720);
 }
 
 
