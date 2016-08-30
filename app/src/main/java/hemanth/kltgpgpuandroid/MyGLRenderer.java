@@ -29,8 +29,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
             AppHelperFuncs.myLOGD("OpenGL3.0 context creation failed!...");
         }
 
-        JNICaller.loadResourcesNative(0, 0, AppHelperFuncs.getScreenWidth(), AppHelperFuncs.getScreenHeight());
-//        JNICaller.loadResourcesNative(0, 0, 640, 360);
+//        JNICaller.loadResourcesNative(0, 0, AppHelperFuncs.getScreenWidth(), AppHelperFuncs.getScreenHeight());
+        JNICaller.loadResourcesNative(0, 0, 640, 360);
         AppHelperFuncs.getParentActivityReference().runOnUiThread(new Runnable() {
             public void run() {
                 AppHelperFuncs.getParentActivityReference().loadResourcesDone();

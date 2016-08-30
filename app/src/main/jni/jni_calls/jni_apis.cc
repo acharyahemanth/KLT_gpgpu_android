@@ -161,9 +161,7 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_processFrameNative
 
     if(mtx_camera.try_lock()) {
         cv::cvtColor(yuv, cam_image_for_back, CV_YUV2RGB_NV21, 3);
-//        cv::resize(cam_image_for_back, cam_image_for_back, cv::Size(0,0),0.5,0.5);
-        cv::flip(cam_image_for_back, cam_image_for_back, 0);
-//        cv::resize(luma, cam_image_for_algo, cv::Size(0,0),0.5,0.5);
+        cv::resize(cam_image_for_back, cam_image_for_back, cv::Size(0,0),0.5,0.5);
         new_cam_image_available = true;
         mtx_camera.unlock();
     }
@@ -183,13 +181,15 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_drawFrameNative
     mtx_camera.lock();
         if(new_cam_image_available){
             back_image = cam_image_for_back.clone();
-//            algo_image = cam_image_for_algo.clone();
             new_cam_image_available = false;
             draw_frame = true;
         }
     mtx_camera.unlock();
-    if(draw_frame)
+    if(draw_frame){
+        cv::cvtColor(back_image, algo_image, CV_RGB2GRAY);
+        cv::flip(back_image, back_image, 0);
         klt->drawFrame(back_image, 1280, 720);
+    }
 }
 
 
