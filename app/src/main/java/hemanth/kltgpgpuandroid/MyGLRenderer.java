@@ -30,7 +30,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         }
 
 //        JNICaller.loadResourcesNative(0, 0, AppHelperFuncs.getScreenWidth(), AppHelperFuncs.getScreenHeight());
-        JNICaller.loadResourcesNative(0, 0, 640, 360);
+        if(!AppHelperFuncs.is_standalone_test)
+            JNICaller.loadResourcesNative(0, 0, 640, 360);
         Message loadresourcesmessage =
                 AppHelperFuncs.getUIHandler().obtainMessage(AppHelperFuncs.UI_HANDLER_STATES.LOAD_RESOURCES_DONE
                         .ordinal());
