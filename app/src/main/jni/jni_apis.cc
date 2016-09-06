@@ -215,6 +215,14 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_drawFrameNative
     }
 }
 
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_standaloneTestNative
+        (JNIEnv *env, jobject obj) {
+    myLOGD("standaloneTestNative");
+
+    if (klt == NULL)
+        return;
+
+}
 
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_debugGLNative
         (JNIEnv *env, jobject obj) {

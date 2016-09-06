@@ -2,7 +2,6 @@ package hemanth.kltgpgpuandroid;
 
 import android.content.res.AssetManager;
 import android.graphics.Point;
-import android.hardware.Camera;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.view.WindowCompat;
@@ -14,14 +13,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 
-public class MainActivity extends AppCompatActivity {
-    CameraClass mCameraObject;
+import hemanth.kltgpgpuandroid.R;
+
+public class StandaloneTestActivity extends AppCompatActivity {
     MyGLSurfaceView mGLView=null;
     UIHandler ui_handler=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        AppHelperFuncs.is_standalone_test = true;
 
         //Set Navbar and ActionBar properties
         supportRequestWindowFeature(WindowCompat.FEATURE_ACTION_BAR_OVERLAY);
@@ -41,21 +43,41 @@ public class MainActivity extends AppCompatActivity {
         display.getRealSize(size);
         int screenWidth = size.x;
         int screenHeight = size.y;
-        AppHelperFuncs.setScreenDims(screenWidth,screenHeight);
+        AppHelperFuncs.setScreenDims(screenWidth, screenHeight);
         AppHelperFuncs.myLOGD("Screen size : w/h : " + screenWidth + " " + screenHeight);
 
 
-
-        //Instantiate camera
-        mCameraObject = new CameraClass(this, newCamPreviewCallback);
-
-        setContentView(R.layout.activity_main);
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        //Setup UI handler
+        ui_handler = new UIHandler(this);
+        AppHelperFuncs.setUIHandler(ui_handler);
+
+        //Setup Layout
+        setContentView(R.layout.activity_main);
+
+        //Setup native shader reader object
+        String pathToInternalDir = getApplicationContext().getFilesDir().getAbsolutePath();
+        AssetManager am = getApplicationContext().getAssets();
+        JNICaller.setupShaderReaderNative(pathToInternalDir, am);
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        finish();
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_standalone_test, menu);
         return true;
     }
 
@@ -74,61 +96,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        ui_handler = new UIHandler(this);
-        AppHelperFuncs.setUIHandler(ui_handler);
-
-        JNICaller.helloWorldNative();
-
-        String pathToInternalDir = getApplicationContext().getFilesDir().getAbsolutePath();
-        AssetManager am = getApplicationContext().getAssets();
-//        JNICaller.testAssetFolderReadNative(pathToInternalDir, am);
-        JNICaller.setupShaderReaderNative(pathToInternalDir, am);
-
-        //Start camera
-        mCameraObject.initAndStartCamera();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        mCameraObject.stopCamera();
-
-        // destroy native objects
-//        deleteObjectNative();
-
-        finish(); // die..!
-
-    }
-
-    static {
-        System.loadLibrary("KLTGPGPUNative");
-    }
-
-    public Camera.PreviewCallback newCamPreviewCallback = new Camera.PreviewCallback() {
-        @Override
-        public void onPreviewFrame(byte[] data, Camera camera) {
-//            AppHelperFuncs.myLOGD("camera callback received!");
-
-
-            if(mGLView != null) {
-                JNICaller.processFrameNative(data,mCameraObject.mPreviewWidth,mCameraObject.mPreviewHeight);
-
-
-                //Native call to create edge map data
-                mGLView.requestRender();
-            }
-
-            //Return buffer to camera
-            camera.addCallbackBuffer(data);
-
-        }
-    };
-
     public static void setImmersiveSticky(Window appWindow) {
 
         View decorView = appWindow.getDecorView();
@@ -138,18 +105,16 @@ public class MainActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         );//| View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        // AM: commented this out to enable listview in landscape.  why?? tbd
     }
 
-    public void loadResourcesDone(){
-        AppHelperFuncs.myLOGD("loadResourcesDone()");
-        mGLView = (MyGLSurfaceView)findViewById(R.id.glsurfaceview);
+    static {
+        System.loadLibrary("KLTGPGPUNative");
     }
 
-    private class UIHandler extends Handler {
-        MainActivity parent_activity;
+    private class UIHandler extends Handler{
+        StandaloneTestActivity parent_activity;
 
-        UIHandler(MainActivity a){
+        UIHandler(StandaloneTestActivity a){
             parent_activity = a;
         }
 
@@ -165,5 +130,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    public void loadResourcesDone(){
+        AppHelperFuncs.myLOGD("loadResourcesDone()");
+        mGLView = (MyGLSurfaceView)findViewById(R.id.glsurfaceview);
+//        mGLView.requestRender();//seems to be called already...
+    }
+
+
 
 }
