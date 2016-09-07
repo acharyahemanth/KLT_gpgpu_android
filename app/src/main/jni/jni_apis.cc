@@ -217,6 +217,10 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_drawFrameNative
 
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_standaloneTestNative
         (JNIEnv *env, jobject obj) {
+    static bool is_standalone_test_run = false;
+    if(is_standalone_test_run)
+        return;
+
     myLOGD(" -------------------- standaloneTestNative -----------------");
     cv::theRNG().state = 12345678;
 
@@ -250,10 +254,16 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_standaloneTestNati
     //Find input corners
     std::vector<cv::Point2f>input_corners;//(kps.size());
     cv::goodFeaturesToTrack(source_gray, input_corners, 10, 0.01, 10);
+
+    //HACK!---
+//    input_corners.clear();
+//    input_corners.push_back(cv::Point2f(17,182));
+
     myLOGD("Found %d corners in source image",input_corners.size());
-    for(int i=0;i<input_corners.size();i++){
-        myLOGD("(%f,%f)",input_corners[i].x,input_corners[i].y);
-    }
+//    for(int i=0;i<input_corners.size();i++){
+//        myLOGD("(%f,%f)",input_corners[i].x,input_corners[i].y);
+//    }
+
 
     //Call KL tracker!
     std::vector<cv::Point2f>tracked_corners;
@@ -261,9 +271,11 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_standaloneTestNati
     klt->execute(source_gray, query_gray, input_corners, tracked_corners, error);
     myLOGD("KLT output is : ");
     for(int i=0;i<tracked_corners.size();i++){
-        myLOGD("(%f,%f) -> (%f,%f)",input_corners[i].x,input_corners[i].y,tracked_corners[i].x,tracked_corners[i].y);
+        if(!error[i])
+            myLOGD("(%f,%f) -> (%f,%f)",input_corners[i].x,input_corners[i].y,tracked_corners[i].x,tracked_corners[i].y);
     }
 
+    is_standalone_test_run = true;
     myLOGD("------------------------- DONE!!! ------------------");
 }
 

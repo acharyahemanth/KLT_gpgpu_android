@@ -134,7 +134,7 @@ public class StandaloneTestActivity extends AppCompatActivity {
     public void loadResourcesDone(){
         AppHelperFuncs.myLOGD("loadResourcesDone()");
         mGLView = (MyGLSurfaceView)findViewById(R.id.glsurfaceview);
-//        mGLView.requestRender();//seems to be called already...
+        mGLView.requestRender();//seems to be called already...
     }
 
 
