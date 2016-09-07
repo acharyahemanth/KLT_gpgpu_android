@@ -141,7 +141,7 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_loadResourcesNativ
     myLOGD("loadResourcesNative");
     myLOGD("width : %d, height : %d",width, height);
     const int num_pyramid_levels = 3;
-    const int search_window_size = 7;
+    const int search_window_size = 21;
     klt = new KLT_gpu(num_pyramid_levels,search_window_size,width, height);
 
     mtx_camera.unlock();
