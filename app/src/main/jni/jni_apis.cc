@@ -200,6 +200,7 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_drawFrameNative
             std::vector<bool>error;
             std::vector<cv::Point2f>tracked_corners;
             klt->execute(prev_image, algo_image, prev_corners, tracked_corners, error);
+//            klt->execute_ocv(prev_image, algo_image, prev_corners, tracked_corners, error);
             klt->drawFrame(back_image, 1280, 720, tracked_corners, error);
             prev_image = algo_image.clone();
             prev_corners.clear();
