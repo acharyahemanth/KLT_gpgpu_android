@@ -31,6 +31,10 @@ private:
     cv::Mat back_image, algo_image, prev_image;
     std::vector<cv::Point2f>prev_corners;
 
+    void paintDataOnFrame(cv::Mat &img, unsigned int num_corners);
+    long long unsigned prev_framedraw_time, fps_averaging_ctr;
+    float average_fps;
+
 };
 
 #endif

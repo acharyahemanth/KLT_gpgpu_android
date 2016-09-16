@@ -1,9 +1,18 @@
 #include "KLT_gpu_engine.h"
 
+long long unsigned currentTimeInMilliseconds() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
+}
+
 KLTGpuEngine::KLTGpuEngine() {
     new_cam_image_available = false;
     is_first_frame = true;
     mtx_camera.unlock();
+    prev_framedraw_time = 0;
+    average_fps = 0;
+    fps_averaging_ctr = 0;
 }
 
 KLTGpuEngine::~KLTGpuEngine() {
@@ -49,6 +58,7 @@ void KLTGpuEngine::drawFrame() {
             cv::goodFeaturesToTrack(algo_image, prev_corners, 100, 0.01, 10);
             myLOGD("First frame : Found %d corners!",prev_corners.size());
             prev_image = algo_image.clone();
+            prev_framedraw_time = currentTimeInMilliseconds();
             is_first_frame = false;
         }
         else {//Run KL tracker and render image with corners painted
@@ -56,6 +66,7 @@ void KLTGpuEngine::drawFrame() {
             std::vector<cv::Point2f>tracked_corners;
             klt->execute(prev_image, algo_image, prev_corners, tracked_corners, error);
 //            klt->execute_ocv(prev_image, algo_image, prev_corners, tracked_corners, error);
+            paintDataOnFrame(back_image, tracked_corners.size());
             klt->drawFrame(back_image, 1280, 720, tracked_corners, error);
             prev_image = algo_image.clone();
             prev_corners.clear();
@@ -69,4 +80,21 @@ void KLTGpuEngine::drawFrame() {
             myLOGD("KLT :: Tracked %d corners...",prev_corners.size());
         }
     }
+}
+
+void KLTGpuEngine::paintDataOnFrame(cv::Mat &img, unsigned int num_corners) {
+
+    long long unsigned elapsed_time = currentTimeInMilliseconds() - prev_framedraw_time;
+    int fontFace = cv::FONT_HERSHEY_PLAIN;
+    double fontScale = 1.8;
+    int thickness = 3;
+    std::stringstream ss;
+    average_fps += 1/(elapsed_time*1e-3);
+    fps_averaging_ctr++;
+
+    ss << "fps : " << average_fps / fps_averaging_ctr;
+    cv::putText(img, ss.str().c_str(), cv::Point(0,360), fontFace, fontScale, cv::Scalar(255,255,0));
+
+    prev_framedraw_time = currentTimeInMilliseconds();
+
 }
