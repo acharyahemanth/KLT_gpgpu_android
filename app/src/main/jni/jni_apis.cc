@@ -161,12 +161,11 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_processFrameNative
     cv::Mat yuv(height * 1.5, width, CV_8UC1, (uchar *) _in);
     cv::Mat luma(height, width, CV_8UC1, (uchar *) _in);
 
-    if(mtx_camera.try_lock()) {
-        cv::cvtColor(yuv, cam_image_for_back, CV_YUV2RGB_NV21, 3);
-        cv::resize(cam_image_for_back, cam_image_for_back, cv::Size(0,0),0.5,0.5);
-        new_cam_image_available = true;
-        mtx_camera.unlock();
-    }
+    mtx_camera.lock();
+    cv::cvtColor(yuv, cam_image_for_back, CV_YUV2RGB_NV21, 3);
+    cv::resize(cam_image_for_back, cam_image_for_back, cv::Size(0,0),0.5,0.5);
+    new_cam_image_available = true;
+    mtx_camera.unlock();
 
     env->ReleaseByteArrayElements(inPixels, _in, JNI_ABORT);
     return;
