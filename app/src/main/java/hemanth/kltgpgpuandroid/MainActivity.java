@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
     CameraClass mCameraObject;
     MyGLSurfaceView mGLView=null;
     UIHandler ui_handler=null;
+    private static native void createEngine();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +46,11 @@ public class MainActivity extends AppCompatActivity {
         AppHelperFuncs.myLOGD("Screen size : w/h : " + screenWidth + " " + screenHeight);
 
 
-
         //Instantiate camera
         mCameraObject = new CameraClass(this, newCamPreviewCallback);
+
+        //Instantiate native object
+        createEngine();
 
         setContentView(R.layout.activity_main);
     }

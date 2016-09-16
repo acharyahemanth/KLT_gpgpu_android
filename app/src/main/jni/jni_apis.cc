@@ -18,22 +18,29 @@
 #include <sstream>
 #include "gl_setup.h"
 #include "gl3stub.h"
-#include "klt_gpu.h"
+#include "basic_engine.h"
+#include "KLT_gpu_engine.h"
 #include "ShaderReader.h"
-#include <mutex>
+#include "standalone_test_engine.h"
 
-//extern BasicEngine * g_basic_engine;
+BasicEngine * g_basic_engine;
 ShaderReader *shader_reader;
-KLT_gpu *klt;
-cv::Mat cam_image_for_back, cam_image_for_algo;
-std::mutex mtx_camera;
-bool new_cam_image_available=false, is_first_frame = true;
-cv::Mat back_image, algo_image, prev_image;
-std::vector<cv::Point2f>prev_corners;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_MainActivity_createEngine
+        (JNIEnv *env, jobject obj) {
+    myLOGD("MainActivity createEngine()");
+    g_basic_engine = new KLTGpuEngine();
+}
+
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_StandaloneTestActivity_createEngine
+        (JNIEnv *env, jobject obj) {
+    myLOGD("StandaloneTestActivity createEngine()");
+    g_basic_engine = new StandaloneTestEngine();
+}
 
 
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_helloWorldNative
@@ -140,33 +147,20 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_loadResourcesNativ
         JNIEnv *env, jobject obj, jint xoffset, jint yoffset, jint width, jint height){
     myLOGD("loadResourcesNative");
     myLOGD("width : %d, height : %d",width, height);
-    const int num_pyramid_levels = 3;
-    const int search_window_size = 21;
-    klt = new KLT_gpu(num_pyramid_levels,search_window_size,width, height);
 
-    mtx_camera.unlock();
-    is_first_frame = true;
+    g_basic_engine->createTrackerObject(width,height);
 }
 
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_processFrameNative
         (JNIEnv *env, jobject obj, jbyteArray inPixels, jint width, jint height) {
 
     myLOGD("processFrameNative");
-    if(klt == NULL) {
+    if(g_basic_engine == NULL) {
         return;
     }
 
-    //YUV -> RGBA conversion
     jbyte *_in = env->GetByteArrayElements(inPixels, NULL);
-    cv::Mat yuv(height * 1.5, width, CV_8UC1, (uchar *) _in);
-    cv::Mat luma(height, width, CV_8UC1, (uchar *) _in);
-
-    mtx_camera.lock();
-    cv::cvtColor(yuv, cam_image_for_back, CV_YUV2RGB_NV21, 3);
-    cv::resize(cam_image_for_back, cam_image_for_back, cv::Size(0,0),0.5,0.5);
-    new_cam_image_available = true;
-    mtx_camera.unlock();
-
+    g_basic_engine->processFrame((unsigned char *)_in, width, height);
     env->ReleaseByteArrayElements(inPixels, _in, JNI_ABORT);
     return;
 }
@@ -175,108 +169,21 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_drawFrameNative
         (JNIEnv *env, jobject obj) {
     myLOGD("drawFrameNative");
 
-    if(klt==NULL)
+    if (g_basic_engine == NULL)
         return;
 
-    bool run_algo=false;
-    mtx_camera.lock();
-        if(new_cam_image_available){
-            back_image = cam_image_for_back.clone();
-            new_cam_image_available = false;
-            run_algo = true;
-        }
-    mtx_camera.unlock();
-    if(run_algo){
-        cv::cvtColor(back_image, algo_image, CV_RGB2GRAY);
-        if(is_first_frame){
-            prev_corners.clear();
-            cv::goodFeaturesToTrack(algo_image, prev_corners, 100, 0.01, 10);
-            myLOGD("First frame : Found %d corners!",prev_corners.size());
-            prev_image = algo_image.clone();
-            is_first_frame = false;
-        }
-        else {
-            std::vector<bool>error;
-            std::vector<cv::Point2f>tracked_corners;
-            klt->execute(prev_image, algo_image, prev_corners, tracked_corners, error);
-//            klt->execute_ocv(prev_image, algo_image, prev_corners, tracked_corners, error);
-            klt->drawFrame(back_image, 1280, 720, tracked_corners, error);
-            prev_image = algo_image.clone();
-            prev_corners.clear();
-            for(int i=0;i<tracked_corners.size();i++){
-                if(!error[i]){
-                    prev_corners.push_back(tracked_corners[i]);
-                }
-            }
-            tracked_corners.clear();
-            error.clear();
-            myLOGD("KLT :: Tracked %d corners...",prev_corners.size());
-        }
-    }
+    g_basic_engine->drawFrame();
 }
 
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_standaloneTestNative
         (JNIEnv *env, jobject obj) {
-    static bool is_standalone_test_run = false;
-    if(is_standalone_test_run)
+    myLOGD("standaloneTestNative");
+
+    if (g_basic_engine == NULL)
         return;
 
-    myLOGD(" -------------------- standaloneTestNative -----------------");
-    cv::theRNG().state = 12345678;
-
-
-    //Read in images----------
-    cv::Mat source_gray = cv::imread("/mnt/sdcard/tryamble_debug/klt_source.jpg");
-    if(source_gray.empty()){
-        myLOGE("ERROR : Source image empty! ... Bailing out...");
-        return;
-    }
-    else{
-        cv::cvtColor(source_gray,source_gray,CV_BGR2GRAY);
-        myLOGD("Read in source_gray of dims %d x %d",source_gray.rows,source_gray.cols);
-    }
-    cv::Mat query_gray = cv::imread("/mnt/sdcard/tryamble_debug/klt_query.jpg");
-    if(query_gray.empty()){
-        myLOGE("ERROR : Query image empty! ... Bailing out...");
-        return;
-    }
-    else{
-        cv::cvtColor(query_gray,query_gray,CV_BGR2GRAY);
-        myLOGD("Read in query_gray of dims %d x %d",query_gray.rows,query_gray.cols);
-    }
-
-
-    //Instantiate the KLT object
-    const int num_pyramid_levels = 3;
-    const int search_window_size = 7;
-    klt = new KLT_gpu(num_pyramid_levels,search_window_size,source_gray.cols, source_gray.rows);
-
-    //Find input corners
-    std::vector<cv::Point2f>input_corners;//(kps.size());
-    cv::goodFeaturesToTrack(source_gray, input_corners, 10, 0.01, 10);
-
-    //HACK!---
-//    input_corners.clear();
-//    input_corners.push_back(cv::Point2f(17,182));
-
-    myLOGD("Found %d corners in source image",input_corners.size());
-//    for(int i=0;i<input_corners.size();i++){
-//        myLOGD("(%f,%f)",input_corners[i].x,input_corners[i].y);
-//    }
-
-
-    //Call KL tracker!
-    std::vector<cv::Point2f>tracked_corners;
-    std::vector<bool>error;
-    klt->execute(source_gray, query_gray, input_corners, tracked_corners, error);
-    myLOGD("KLT output is : ");
-    for(int i=0;i<tracked_corners.size();i++){
-        if(!error[i])
-            myLOGD("(%f,%f) -> (%f,%f)",input_corners[i].x,input_corners[i].y,tracked_corners[i].x,tracked_corners[i].y);
-    }
-
-    is_standalone_test_run = true;
-    myLOGD("------------------------- DONE!!! ------------------");
+    StandaloneTestEngine *ste = (StandaloneTestEngine*)g_basic_engine;
+    ste->runStandaloneTest();
 }
 
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_debugGLNative

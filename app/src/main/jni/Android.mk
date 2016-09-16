@@ -12,7 +12,9 @@ OPENCV_CAMERA_MODULES:=off
 OPENCV_LIB_TYPE:=STATIC
 include $(OPENCV_PATH)/OpenCV.mk
 LOCAL_MODULE            := KLTGPGPUNative
-LOCAL_SRC_FILES         := jni_apis.cc
+LOCAL_SRC_FILES         := jni_apis.cc \
+                           KLT_gpu_engine.cpp \
+                           standalone_test_engine.cpp
 LOCAL_LDLIBS            += -lm -llog -landroid -lEGL -lz -lGLESv3
 LOCAL_STATIC_LIBRARIES  += klt_gpgpu ndk_helper android_native_app_glue
 LOCAL_CPP_EXTENSION     := .cxx .cpp .cc

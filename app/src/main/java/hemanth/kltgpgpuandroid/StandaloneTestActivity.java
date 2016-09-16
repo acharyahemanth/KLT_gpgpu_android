@@ -18,12 +18,15 @@ import hemanth.kltgpgpuandroid.R;
 public class StandaloneTestActivity extends AppCompatActivity {
     MyGLSurfaceView mGLView=null;
     UIHandler ui_handler=null;
+    private static native void createEngine();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         AppHelperFuncs.is_standalone_test = true;
+
+        createEngine();
 
         //Set Navbar and ActionBar properties
         supportRequestWindowFeature(WindowCompat.FEATURE_ACTION_BAR_OVERLAY);
