@@ -55,3 +55,11 @@ task ndkBuild(type: Exec) {
 tasks.withType(JavaCompile) {
     compileTask -> compileTask.dependsOn ndkBuild
 }
+
+task shadercopytask(type: Exec) {
+    workingDir "$projectDir/src/main/"
+    println "Copying shaders"
+    commandLine 'sh', './copyshaders.sh'
+}
+
+preBuild.dependsOn shadercopytask
