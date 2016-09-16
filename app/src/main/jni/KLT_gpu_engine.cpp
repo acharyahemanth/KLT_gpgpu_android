@@ -55,7 +55,7 @@ void KLTGpuEngine::drawFrame() {
         cv::cvtColor(back_image, algo_image, CV_RGB2GRAY);
         if(is_first_frame){//If first frame, calculate input corners
             prev_corners.clear();
-            cv::goodFeaturesToTrack(algo_image, prev_corners, 100, 0.01, 10);
+            cv::goodFeaturesToTrack(algo_image, prev_corners, NUM_CORNERS_TO_TRACK, 0.01, 10);
             myLOGD("First frame : Found %d corners!",prev_corners.size());
             prev_image = algo_image.clone();
             prev_framedraw_time = currentTimeInMilliseconds();
@@ -86,14 +86,18 @@ void KLTGpuEngine::paintDataOnFrame(cv::Mat &img, unsigned int num_corners) {
 
     long long unsigned elapsed_time = currentTimeInMilliseconds() - prev_framedraw_time;
     int fontFace = cv::FONT_HERSHEY_PLAIN;
-    double fontScale = 1.8;
+    double fontScale = 1.3;
     int thickness = 3;
     std::stringstream ss;
     average_fps += 1/(elapsed_time*1e-3);
     fps_averaging_ctr++;
 
     ss << "fps : " << average_fps / fps_averaging_ctr;
-    cv::putText(img, ss.str().c_str(), cv::Point(0,360), fontFace, fontScale, cv::Scalar(255,255,0));
+    cv::putText(img, ss.str().c_str(), cv::Point(0,360), fontFace, fontScale, cv::Scalar(255,0,0));
+    ss.str("");
+    ss << "# corners : " << num_corners;
+    cv::putText(img, ss.str().c_str(), cv::Point(0,360-20), fontFace, fontScale, cv::Scalar(255,0,0));
+
 
     prev_framedraw_time = currentTimeInMilliseconds();
 

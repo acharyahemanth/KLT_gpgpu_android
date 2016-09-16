@@ -14,7 +14,7 @@
 //Constants---
 #define NUM_PYRAMID_LEVELS 3
 #define SEARCH_WINDOW_SIZE 21
-
+#define NUM_CORNERS_TO_TRACK 100
 
 class KLTGpuEngine : public BasicEngine{
 public:
