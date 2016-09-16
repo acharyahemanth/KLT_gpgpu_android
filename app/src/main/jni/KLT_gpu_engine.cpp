@@ -14,9 +14,11 @@ KLTGpuEngine::KLTGpuEngine() {
     average_fps = 0;
     fps_averaging_ctr = 0;
     run_on_gpu = true;
+    start_tracking = false;
 }
 
 KLTGpuEngine::~KLTGpuEngine() {
+    myLOGD("~KLTGpuEngine()");
     mtx_camera.lock();
     if(klt)
         delete klt;
@@ -65,10 +67,12 @@ void KLTGpuEngine::drawFrame() {
         else {//Run KL tracker and render image with corners painted
             std::vector<bool>error;
             std::vector<cv::Point2f>tracked_corners;
-            if(run_on_gpu)
-                klt->execute(prev_image, algo_image, prev_corners, tracked_corners, error);
-            else
-                klt->execute_ocv(prev_image, algo_image, prev_corners, tracked_corners, error);
+            if(start_tracking){
+                if(run_on_gpu)
+                    klt->execute(prev_image, algo_image, prev_corners, tracked_corners, error);
+                else
+                    klt->execute_ocv(prev_image, algo_image, prev_corners, tracked_corners, error);
+            }
             paintDataOnFrame(back_image, tracked_corners.size());
             klt->drawFrame(back_image, 1280, 720, tracked_corners, error);
             prev_image = algo_image.clone();
@@ -112,6 +116,15 @@ void KLTGpuEngine::paintDataOnFrame(cv::Mat &img, unsigned int num_corners) {
 void KLTGpuEngine::switchGPUCPU() {
     mtx_camera.lock();
         run_on_gpu = !run_on_gpu;
+        average_fps = 0;
+        fps_averaging_ctr = 0;
+    mtx_camera.unlock();
+}
+
+void KLTGpuEngine::startTracking() {
+    mtx_camera.lock();
+        start_tracking = true;
+        is_first_frame = true;
         average_fps = 0;
         fps_averaging_ctr = 0;
     mtx_camera.unlock();

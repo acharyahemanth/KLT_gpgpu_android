@@ -21,6 +21,19 @@
         android:layout_gravity="left|center_vertical"
         android:visibility="invisible"/>
 
+    <ImageButton
+        android:id="@+id/start_button"
+        android:background="@android:color/transparent"
+        android:src="@drawable/start_button"
+        android:scaleType="centerInside"
+        android:layout_alignParentRight="true"
+        android:layout_gravity="right|center_vertical"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_marginRight="40dp"
+        android:visibility="visible"
+        />
+
     <!-- Relative layout depending on
          realtime : realtime_land_camlayoutglgl.xml
          frozen-frame : ff_land_camlayout.xml

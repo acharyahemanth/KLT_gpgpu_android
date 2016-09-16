@@ -127,9 +127,35 @@ public class CameraClass {
         param.setPreviewSize(mPreviewWidth, mPreviewHeight);
         AppHelperFuncs.myLOGD("Setting preview resolution to " + param.getPreviewSize().width + "x" + param.getPreviewSize().height);
 
+        //Set Continous Focus
+        param = setFocusMode(param);
 
         mCamera.setParameters(param);
     }
+
+    private Camera.Parameters setFocusMode(Camera.Parameters param) {
+        boolean isContinousPictureFocusAvailable, isContinousVideoFocusAvailable;
+        isContinousPictureFocusAvailable = isContinousVideoFocusAvailable = false;
+        List<String> focusModes = param.getSupportedFocusModes();
+        for (String str : focusModes) {
+            if (str.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+                isContinousPictureFocusAvailable = true;
+            } else if (str.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+                isContinousVideoFocusAvailable = true;
+            }
+        }
+        if(isContinousPictureFocusAvailable){
+            AppHelperFuncs.myLOGD("Setting Focus Mode to FOCUS_MODE_CONTINOUS_PICTURE");
+            param.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        }
+        else if(isContinousVideoFocusAvailable){
+            AppHelperFuncs.myLOGD("Setting Focus Mode to FOCUS_MODE_CONTINUOUS_VIDEO");
+            param.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+        }
+
+        return param;
+    }
+
 
     void setupCameraCallback() {
         //Setup callback ------------

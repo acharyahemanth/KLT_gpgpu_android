@@ -185,6 +185,16 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_MainActivity_toggleCPUGPUOpe
     ((KLTGpuEngine *)g_basic_engine)->switchGPUCPU();
 }
 
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_MainActivity_startTrackingNative
+        (JNIEnv *env, jobject obj) {
+    myLOGD("toggleCPUGPUOperationNative");
+
+    if (g_basic_engine == NULL)
+        return;
+
+    ((KLTGpuEngine *)g_basic_engine)->startTracking();
+}
+
 
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_standaloneTestNative
         (JNIEnv *env, jobject obj) {
@@ -196,6 +206,18 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_standaloneTestNati
     StandaloneTestEngine *ste = (StandaloneTestEngine*)g_basic_engine;
     ste->runStandaloneTest();
 }
+
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_deleteObjectNative
+        (JNIEnv *env, jobject obj) {
+    myLOGD("deleteObjectNative");
+
+    if (g_basic_engine == NULL)
+        return;
+
+    delete g_basic_engine;
+    g_basic_engine = NULL;
+}
+
 
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_debugGLNative
         (JNIEnv *env, jobject obj) {

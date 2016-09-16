@@ -34,5 +34,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
+        AppHelperFuncs.myLOGD("myGLSurfaceView::surfaceDestroyed()");
+        JNICaller.deleteObjectNative();
     }
 }

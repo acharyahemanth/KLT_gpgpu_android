@@ -3,6 +3,7 @@ package hemanth.kltgpgpuandroid;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Message;
+import android.view.SurfaceHolder;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -49,4 +50,5 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceChanged(GL10 unused, int width, int height) {
         AppHelperFuncs.myLOGD("onSurfaceChanged() " + width + "x" + height);
     }
+
 }

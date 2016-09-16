@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.widget.ImageView;
 
 public class MainActivity extends AppCompatActivity {
     CameraClass mCameraObject;
@@ -20,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
     UIHandler ui_handler=null;
     private static native void createEngine();
     private static native void toggleCPUGPUOperationNative();
+    private static native void startTrackingNative();
+    ImageView startButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +57,12 @@ public class MainActivity extends AppCompatActivity {
         createEngine();
 
         setContentView(R.layout.activity_main);
+        startButton = (ImageView) findViewById(R.id.start_button);
+        startButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                startTrackingNative();
+            }
+        });
     }
 
     @Override
@@ -100,10 +109,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
 
-        mCameraObject.stopCamera();
+        AppHelperFuncs.myLOGD("onPause() : Closing app...");
 
-        // destroy native objects
-//        deleteObjectNative();
+        mCameraObject.stopCamera();
 
         finish(); // die..!
 
@@ -117,7 +125,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
 //            AppHelperFuncs.myLOGD("camera callback received!");
-
 
             if(mGLView != null) {
                 JNICaller.processFrameNative(data,mCameraObject.mPreviewWidth,mCameraObject.mPreviewHeight);
