@@ -23,6 +23,7 @@ public:
     void createTrackerObject(int image_width, int image_height);
     void processFrame(unsigned char * _in, jint width, jint height);
     void drawFrame();
+    void switchGPUCPU();
 private:
     KLT_gpu *klt;
     cv::Mat cam_image_for_back, cam_image_for_algo;
@@ -34,6 +35,7 @@ private:
     void paintDataOnFrame(cv::Mat &img, unsigned int num_corners);
     long long unsigned prev_framedraw_time, fps_averaging_ctr;
     float average_fps;
+    bool run_on_gpu;
 
 };
 

@@ -175,6 +175,17 @@ JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_drawFrameNative
     g_basic_engine->drawFrame();
 }
 
+JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_MainActivity_toggleCPUGPUOperationNative
+        (JNIEnv *env, jobject obj) {
+    myLOGD("toggleCPUGPUOperationNative");
+
+    if (g_basic_engine == NULL)
+        return;
+
+    ((KLTGpuEngine *)g_basic_engine)->switchGPUCPU();
+}
+
+
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_JNICaller_standaloneTestNative
         (JNIEnv *env, jobject obj) {
     myLOGD("standaloneTestNative");

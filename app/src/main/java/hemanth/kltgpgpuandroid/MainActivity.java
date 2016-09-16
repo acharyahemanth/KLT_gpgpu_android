@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
     MyGLSurfaceView mGLView=null;
     UIHandler ui_handler=null;
     private static native void createEngine();
+    private static native void toggleCPUGPUOperationNative();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,8 +71,8 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        if (id == R.id.toggle_cpu_gpu) {
+            toggleCPUGPUOperationNative();
         }
 
         return super.onOptionsItemSelected(item);

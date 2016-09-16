@@ -13,6 +13,7 @@ KLTGpuEngine::KLTGpuEngine() {
     prev_framedraw_time = 0;
     average_fps = 0;
     fps_averaging_ctr = 0;
+    run_on_gpu = true;
 }
 
 KLTGpuEngine::~KLTGpuEngine() {
@@ -64,8 +65,10 @@ void KLTGpuEngine::drawFrame() {
         else {//Run KL tracker and render image with corners painted
             std::vector<bool>error;
             std::vector<cv::Point2f>tracked_corners;
-            klt->execute(prev_image, algo_image, prev_corners, tracked_corners, error);
-//            klt->execute_ocv(prev_image, algo_image, prev_corners, tracked_corners, error);
+            if(run_on_gpu)
+                klt->execute(prev_image, algo_image, prev_corners, tracked_corners, error);
+            else
+                klt->execute_ocv(prev_image, algo_image, prev_corners, tracked_corners, error);
             paintDataOnFrame(back_image, tracked_corners.size());
             klt->drawFrame(back_image, 1280, 720, tracked_corners, error);
             prev_image = algo_image.clone();
@@ -92,7 +95,10 @@ void KLTGpuEngine::paintDataOnFrame(cv::Mat &img, unsigned int num_corners) {
     average_fps += 1/(elapsed_time*1e-3);
     fps_averaging_ctr++;
 
-    ss << "fps : " << average_fps / fps_averaging_ctr;
+    if(run_on_gpu)
+        ss << "GPU fps : " << average_fps / fps_averaging_ctr;
+    else
+        ss << "CPU fps : " << average_fps / fps_averaging_ctr;
     cv::putText(img, ss.str().c_str(), cv::Point(0,360), fontFace, fontScale, cv::Scalar(255,0,0));
     ss.str("");
     ss << "# corners : " << num_corners;
@@ -101,4 +107,12 @@ void KLTGpuEngine::paintDataOnFrame(cv::Mat &img, unsigned int num_corners) {
 
     prev_framedraw_time = currentTimeInMilliseconds();
 
+}
+
+void KLTGpuEngine::switchGPUCPU() {
+    mtx_camera.lock();
+        run_on_gpu = !run_on_gpu;
+        average_fps = 0;
+        fps_averaging_ctr = 0;
+    mtx_camera.unlock();
 }
