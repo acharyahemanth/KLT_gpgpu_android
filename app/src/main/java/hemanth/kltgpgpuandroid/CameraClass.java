@@ -36,17 +36,16 @@ public class CameraClass {
 
         try {
             mCamera = openCamera(camFacing);
-            //mCamera = Camera.open();//Camera should be opened only after surface is created!
-            //mCamera.setPreviewDisplay(surfaceHolder);
         } catch (Exception e) {
             AppHelperFuncs.myLOGE("Unable to open camera!");
             System.err.println(e.getMessage());
             return;
         }
-        AppHelperFuncs.myLOGD("Surface created... Camera opened...");
+        AppHelperFuncs.myLOGD("Camera opened...");
         setupCamera();
     }
 
+    //Opens camera on a new thread
     private Camera openCamera(int camFacing) {
         int cameraCount = 0;
         Camera cam = null;
@@ -55,21 +54,18 @@ public class CameraClass {
         for (int camIdx = 0; camIdx < cameraCount; camIdx++) {
             Camera.getCameraInfo(camIdx, cameraInfo);
             if (cameraInfo.facing == camFacing) {
-                cam = newOpenCamera(camIdx);
+
+                if (mThread == null) {
+                    mThread = new CameraHandlerThread();
+                }
+
+                cam = null;
+                synchronized (mThread) {
+                    cam = mThread.openCamera(camIdx);
+                }
             }
         }
 
-        return cam;
-    }
-    private static Camera newOpenCamera(int camIdx) {
-        if (mThread == null) {
-            mThread = new CameraHandlerThread();
-        }
-
-        Camera cam = null;
-        synchronized (mThread) {
-            cam = mThread.openCamera(camIdx);
-        }
         return cam;
     }
 
@@ -90,7 +86,13 @@ public class CameraClass {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    cam = oldOpenCamera(camIdx);
+                    cam = null;
+                    try {
+                        cam = Camera.open(camIdx);
+                    } catch (RuntimeException e) {
+                        AppHelperFuncs.myLOGE("Camera failed to open: " + e.getLocalizedMessage());
+                    }
+
                     notifyCameraOpened();
                 }
             });
@@ -102,15 +104,6 @@ public class CameraClass {
             }
             return cam;
         }
-    }
-    private static Camera oldOpenCamera(int camIdx) {
-        Camera cam = null;
-        try {
-            cam = Camera.open(camIdx);
-        } catch (RuntimeException e) {
-            AppHelperFuncs.myLOGE("Camera failed to open: " + e.getLocalizedMessage());
-        }
-        return cam;
     }
 
     private void setupCamera() {
@@ -176,9 +169,7 @@ public class CameraClass {
         }
     }
 
-    public void initAndStartCamera(){
-        initCam(); //required if activity is restarted after power button.
-
+    public void startCamera(){
         try {
             AppHelperFuncs.myLOGD("Starting preview...");
             mCamera.startPreview();

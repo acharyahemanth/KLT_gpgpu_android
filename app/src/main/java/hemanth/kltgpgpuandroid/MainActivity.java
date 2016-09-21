@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         JNICaller.setupShaderReaderNative(pathToInternalDir, am);
 
         //Start camera
-        mCameraObject.initAndStartCamera();
+        mCameraObject.startCamera();
     }
 
     @Override
