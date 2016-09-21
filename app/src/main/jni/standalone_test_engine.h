@@ -26,6 +26,10 @@ public:
     void runStandaloneTest();
 private:
     KLT_gpu *klt;
+    std::vector<cv::Point2f>tracked_corners;
+    std::vector<bool>error;
+    cv::Mat back_img;
+
 };
 
 #endif
