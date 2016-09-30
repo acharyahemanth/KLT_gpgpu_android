@@ -6,7 +6,7 @@ long long unsigned currentTimeInMilliseconds() {
     return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
-KLTGpuEngine::KLTGpuEngine() {
+KLTGpuEngine::KLTGpuEngine(int screen_width, int screen_height) {
     new_cam_image_available = false;
     is_first_frame = true;
     mtx_camera.unlock();
@@ -15,6 +15,8 @@ KLTGpuEngine::KLTGpuEngine() {
     fps_averaging_ctr = 0;
     run_on_gpu = true;
     start_tracking = false;
+    this->screen_width = screen_width;
+    this->screen_height = screen_height;
 }
 
 KLTGpuEngine::~KLTGpuEngine() {
@@ -74,7 +76,7 @@ void KLTGpuEngine::drawFrame() {
                     klt->execute_ocv(prev_image, algo_image, prev_corners, tracked_corners, error);
             }
             paintDataOnFrame(back_image, tracked_corners.size());
-            klt->drawFrame(back_image, 1280, 720, tracked_corners, error);
+            klt->drawFrame(back_image, screen_width, screen_height, tracked_corners, error);
             prev_image = algo_image.clone();
             prev_corners.clear();
             for(int i=0;i<tracked_corners.size();i++){

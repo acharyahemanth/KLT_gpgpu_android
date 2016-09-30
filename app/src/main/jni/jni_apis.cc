@@ -31,9 +31,9 @@ extern "C" {
 #endif
 
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_MainActivity_createEngine
-        (JNIEnv *env, jobject obj) {
+        (JNIEnv *env, jobject obj, jint screen_width, jint screen_height) {
     myLOGD("MainActivity createEngine()");
-    g_basic_engine = new KLTGpuEngine();
+    g_basic_engine = new KLTGpuEngine((int)screen_width, (int)screen_height);
 }
 
 JNIEXPORT void JNICALL Java_hemanth_kltgpgpuandroid_StandaloneTestActivity_createEngine

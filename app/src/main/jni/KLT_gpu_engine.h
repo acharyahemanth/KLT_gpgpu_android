@@ -18,7 +18,7 @@
 
 class KLTGpuEngine : public BasicEngine{
 public:
-    KLTGpuEngine();
+    KLTGpuEngine(int screen_width, int screen_height);
     ~KLTGpuEngine();
     void createTrackerObject(int image_width, int image_height);
     void processFrame(unsigned char * _in, jint width, jint height);
@@ -38,7 +38,7 @@ private:
     float average_fps;
     bool run_on_gpu;
     bool start_tracking;
-
+    int screen_width, screen_height;
 };
 
 #endif
